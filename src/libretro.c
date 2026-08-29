@@ -469,8 +469,10 @@ void retro_run(void)
             for (col = 0; col < out_width; col++) {
                uint16_t p = src[col];
                
-               uint16_t r = p & 0x1F;
-               uint16_t g = (p >> 5)  & 0x1F;
+               // Extract components assuming source is standard 16-bit RGB (5-5-5 or similar)
+               // Adjust if source channels are laid out differently
+               uint16_t r = p & 0x1F; 
+               uint16_t g = (p >> 6)  & 0x1F;
                uint16_t b = (p >> 11) & 0x1F;
                
                // Re-pack into clean BGR555 format without channel overlap
