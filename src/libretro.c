@@ -470,7 +470,7 @@ void retro_run(void)
                uint16_t p = src[col];
               
                uint16_t r = p & 0x1F; 
-               uint16_t g = (p >> 5)  & 0x1F; // Corrected shift to align the 5-bit green channel properly
+               uint16_t g = (p >> 6)  & 0x1F; // Corrected shift to align the 5-bit green channel properly
                uint16_t b = (p >> 11) & 0x1F;
                
                // Re-pack into clean BGR555 format without channel overlap
