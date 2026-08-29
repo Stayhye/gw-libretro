@@ -476,7 +476,7 @@ void retro_run(void)
                uint16_t b = (p >> 11) & 0x1F;
                
                // Re-pack with Red and Blue swapped (BGR layout) plus alpha/unused bit
-               dest[col] = (p & 0x8000) | (b << 10) | (g << 5) | r;
+               dest[col] = (b << 11) | (g << 5) | r;
             }
          }
          video_cb(pixels, out_width, out_height, out_width * sizeof( uint16_t ));
