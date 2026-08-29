@@ -362,7 +362,7 @@ void retro_run(void)
    int16_t x, y;
    static const struct { unsigned retro; int gw; } map[] =
    {
-      { RETRO_DEVICE_ID_JOYPAD_UP,     GWLUA_UP },
+      { RETRO_DEVICE_ID_JOYPAD_UP,    GWLUA_UP },
       { RETRO_DEVICE_ID_JOYPAD_DOWN,   GWLUA_DOWN },
       { RETRO_DEVICE_ID_JOYPAD_LEFT,   GWLUA_LEFT },
       { RETRO_DEVICE_ID_JOYPAD_RIGHT,  GWLUA_RIGHT },
@@ -448,46 +448,69 @@ void retro_run(void)
    gwlua_tick( &state );
    rl_sprites_blit();
 
-   // Several reasons to have a temporary buffer on PSP
-   // 1. PSP needs a pixel-pitch divisible by 8 (byte-pitch by 16)
-   // 2. Largest width is around 512
-   // 3. It keeps looking into buffer even after video_cb call
-
-#ifdef PSP
+#ifdef PS2
    {
-     int in_width = soft_width;
-     int divisor = (in_width + 511) / 512;
-     int out_width = in_width / divisor;
-     int out_height = soft_height / divisor;
-     int out_pitch = ((state.width / divisor) + 7) & ~7;
-     int in_pitch = state.width;
-     size_t cur_pixels_size = out_pitch * out_height * sizeof( uint16_t );
+      int line, col;
+      int out_width = soft_width;
+      int out_height = soft_height;
+      int in_pitch = state.width;
+      size_t cur_pixels_size = out_width * out_height * sizeof( uint16_t );
 
-     if (cur_pixels_size > pixels_size) {
-       if (pixels)
-	 free(pixels);
-       pixels = malloc(cur_pixels_size);
-       pixels_size = pixels ? cur_pixels_size : 0;
-     }
-     if (pixels) {
-       int line;
-       if (divisor == 1) {
-	   for (line = 0; line < out_height; line++) {
-	     const uint16_t *src = state.screen + offset + in_pitch * line;
-	     uint16_t *dest = pixels + out_pitch * line;
-	     memcpy(dest, src, out_width * sizeof( uint16_t ));
-	   }
-       } else {
-	 for (line = 0; line < out_height; line++) {
-	   const uint16_t *src = state.screen + offset + in_pitch * divisor * line;
-	   uint16_t *dest = pixels + out_pitch * line;
-	   uint16_t *dest_end = dest + out_width;
-	   for(; dest < dest_end; dest++, src += divisor)
-	     *dest = *src;
-	 }
-       }
-       video_cb( pixels, out_width, out_height, out_pitch * sizeof( uint16_t ) );
-     }
+      if (cur_pixels_size > pixels_size) {
+         if (pixels)
+            free(pixels);
+         pixels = malloc(cur_pixels_size);
+         pixels_size = pixels ? cur_pixels_size : 0;
+      }
+      if (pixels) {
+         for (line = 0; line < out_height; line++) {
+            const uint16_t *src = state.screen + offset + in_pitch * line;
+            uint16_t *dest = pixels + out_width * line;
+            for (col = 0; col < out_width; col++) {
+               uint16_t p = src[col];
+               dest[col] = ((p & 0x1F) << 11) | (p & 0x7E0) | ((p >> 11) & 0x1F);
+            }
+         }
+         video_cb(pixels, out_width, out_height, out_width * sizeof( uint16_t ));
+      } else {
+         video_cb( state.screen + offset, soft_width, soft_height, state.width * sizeof( uint16_t ) );
+      }
+   }
+#elif defined(PSP)
+   {
+      int in_width = soft_width;
+      int divisor = (in_width + 511) / 512;
+      int out_width = in_width / divisor;
+      int out_height = soft_height / divisor;
+      int out_pitch = ((state.width / divisor) + 7) & ~7;
+      int in_pitch = state.width;
+      size_t cur_pixels_size = out_pitch * out_height * sizeof( uint16_t );
+
+      if (cur_pixels_size > pixels_size) {
+         if (pixels)
+            free(pixels);
+         pixels = malloc(cur_pixels_size);
+         pixels_size = pixels ? cur_pixels_size : 0;
+      }
+      if (pixels) {
+         int line;
+         if (divisor == 1) {
+            for (line = 0; line < out_height; line++) {
+               const uint16_t *src = state.screen + offset + in_pitch * line;
+               uint16_t *dest = pixels + out_pitch * line;
+               memcpy(dest, src, out_width * sizeof( uint16_t ));
+            }
+         } else {
+            for (line = 0; line < out_height; line++) {
+               const uint16_t *src = state.screen + offset + in_pitch * divisor * line;
+               uint16_t *dest = pixels + out_pitch * line;
+               uint16_t *dest_end = dest + out_width;
+               for(; dest < dest_end; dest++, src += divisor)
+                  *dest = *src;
+            }
+         }
+         video_cb( pixels, out_width, out_height, out_pitch * sizeof( uint16_t ) );
+      }
    }
 #else
    video_cb( state.screen + offset, soft_width, soft_height, state.width * sizeof( uint16_t ) );
