@@ -468,7 +468,8 @@ void retro_run(void)
             uint16_t *dest = pixels + out_width * line;
             for (col = 0; col < out_width; col++) {
                uint16_t p = src[col];
-               dest[col] = ((p & 0x1F) << 11) | (p & 0x7E0) | ((p >> 11) & 0x1F);
+               // Corrected 15-bit swap for ABGR1555 / 0RGB1555 layout
+               dest[col] = (p & 0x8000) | ((p & 0x1F) << 10) | (p & 0x3E0) | ((p >> 10) & 0x1F);
             }
          }
          video_cb(pixels, out_width, out_height, out_width * sizeof( uint16_t ));
@@ -476,6 +477,8 @@ void retro_run(void)
          video_cb( state.screen + offset, soft_width, soft_height, state.width * sizeof( uint16_t ) );
       }
    }
+#endif
+
 #elif defined(PSP)
    {
       int in_width = soft_width;
