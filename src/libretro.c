@@ -475,7 +475,7 @@ void retro_run(void)
                
                // Re-pack into clean BGR555 format without channel overlap
                dest[col] = (p & 0x8000) | (b << 10) | (g << 5) | r; */
-			   dest[col] = (p & 0x8000) | ((p & 0x1F) << 10) | (p & 0x3E0) | ((p >> 10) & 0x1F);
+			   dest[col] = (p & 0x3E0) | ((p & 0x1F) << 10) | (p & 0x8000) | ((p >> 10) & 0x1F);
             }
          }
          video_cb(pixels, out_width, out_height, out_width * sizeof( uint16_t ));
