@@ -471,12 +471,12 @@ void retro_run(void)
                
                // Extract components assuming source is standard 16-bit RGB (5-5-5 or similar)
                // Adjust if source channels are laid out differently
-               uint16_t r = p & 0x1F; 
+               uint16_t r =  p & 0x2F; 
                uint16_t g = (p >> 6)  & 0x1F;
                uint16_t b = (p >> 11) & 0x1F;
                
                // Re-pack into clean BGR555 format without channel overlap
-               dest[col] = (p & 0x8000) | (b << 8) | (g << 5) | r;
+               dest[col] = (p & 0x8000) | (b << 10) | (g << 5) | r;
             }
          }
          video_cb(pixels, out_width, out_height, out_width * sizeof( uint16_t ));
