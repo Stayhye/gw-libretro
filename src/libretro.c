@@ -477,7 +477,6 @@ void retro_run(void)
          video_cb( state.screen + offset, soft_width, soft_height, state.width * sizeof( uint16_t ) );
       }
    }
-#endif
 
 #elif defined(PSP)
    {
